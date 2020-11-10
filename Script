@@ -1,1 +1,709 @@
+# Disciplina Topicos IV - Análise de dados ecológicos
+# Professor: Angelo Bernardino
+# Monitora: Patrícia Stelzer
 
+# Atividade - Ampliando o uso do R para visualização de dados ecológicos e meteo-oceanográficos
+
+# Objetivos - Utilizando a linguagem R, aplicar ferramentas de acesso à bases de dados globais e de sensoriamento remoto por satélite sobre os oceanos, e implementar técnicas de visualização gráfica
+
+# Resultados esperados - Desenvolver habilidades de acesso e visualização de bigdata
+
+
+################################################################
+
+
+### Install Packages ###
+
+install.packages("ggplot2")
+
+################################################################
+
+### Load Packages ###
+
+library(ggplot2)
+
+################################################################
+
+### Basico GGPLOT2 ###
+
+# Informação #
+browseURL("https://github.com/rstudio/cheatsheets/blob/master/data-visualization-2.1.pdf")
+
+# Exemplo geral #
+
+mpg # conjunto de dados default
+
+View(mpg) # abrir arquivo
+
+ggplot() +
+geom_point(data = mpg, aes(displ, hwy, colour = class)) #scatterplot das variáveis(displ,hwy)
+
+#(data = puxa sua tabela de dados)
+#(aes = ordena os atributos/eixos nas virgulas - x(displ) y(hwy))
+
+
+# Adicionar legendas #
+ggplot() +
+  geom_point(data = mpg, aes(displ, hwy, colour = class)) +
+  xlab("Highway") +
+  ylab("Engine Displacement")
+
+# Determinar limites x/y #
+ggplot() +
+  geom_point(data = mpg, aes(displ, hwy, colour = class)) +
+  xlab("Highway Miles per Gallon") +
+  ylab("Displacement") +
+  lims(x = c(0,8), y = c(0,50))
+
+# Adicionar linhas de tendência #
+ggplot(mpg, aes(displ, hwy, colour = class)) +
+  geom_point() +
+  stat_smooth() +
+  xlab("Highway Miles per Gallon") +
+  ylab("Displacement")
+
+
+# Alterar tipo de gráfico #
+
+ggplot(mpg, aes(displ, hwy, colour = class)) +
+  geom_col() +
+  xlab("Highway Miles per Gallon") +
+  ylab("Displacement") # colunas
+
+
+ggplot(mpg, aes(displ, hwy, colour = class)) +
+  geom_boxplot() +
+  xlab("Highway Miles per Gallon") +
+  ylab("Displacement") # boxplot
+
+
+ggplot(mpg, aes(displ, hwy, colour = class)) +
+  geom_density2d() +
+  xlab("Highway Miles per Gallon") +
+  ylab("Displacement") # densidade
+
+
+# Customizar o gráfico #
+ggplot(mpg, aes(displ, hwy, colour = class)) +
+  geom_boxplot() +
+  xlab("Highway Miles per Gallon") +
+  ylab("Displacement") +
+  ggtitle("Car Stats") + #titulo
+  theme(plot.title = element_text(lineheight=.8, face="bold", size = 15)) + #titulo
+  theme(text = element_text(size=15)) #texto/legendas
+
+
+
+################################################################
+
+### Ocean Biodiversity Information System ###
+
+# Pacotes#
+
+install.packages("robis")
+install.packages("maps")
+library(robis)
+library(maps)
+
+##Informação
+browseURL("https://obis.org/")
+
+## Exemplo 1 - Mapas de Ocorrência ##
+
+#Baixar dados de Ocorrência de Peixe-lua do OBIS (objeto)
+molram <- occurrence("Mola ramsayi")
+
+#Visualizar dataset #
+View(molram)
+
+#Plotar os dados geométricos com yLong e xLat
+ggplot() + geom_point(data = molram, aes(x = decimalLongitude, y = decimalLatitude))
+
+#Criar um MapaMundi (objeto)
+world <- map_data("world")
+
+#Plotar os dados de ocorrência no mapa
+ggplot() +
+  geom_polygon(data = world, aes(x = long, y = lat, group = group), fill = "dark grey") +
+  geom_point(data = molram, aes(x = decimalLongitude, y = decimalLatitude), colour = "green")
+
+#Melhorar(fixar) a escala do mapa
+ggplot() +
+  geom_polygon(data = world, aes(x = long, y = lat, group = group), fill = "#dddddd") +
+  geom_point(data = molram, aes(x = decimalLongitude, y = decimalLatitude)) +
+  coord_fixed(1)
+
+#Dar zoom no mapa
+ggplot() +
+  geom_polygon(data = world, aes(x = long, y = lat, group = group), fill = "#dddddd") +
+  geom_point(data = molram, aes(x = decimalLongitude, y = decimalLatitude)) +
+  coord_fixed(1, xlim = c(0, 180), ylim = c(-60, 0))
+
+#Adicionar cores aos pontos, de acordo com o Ano da ocorrência
+ggplot() +
+  geom_polygon(data = world, aes(x = long, y = lat, group = group), fill = "#dddddd") +
+  geom_point(data = molram, aes(x = decimalLongitude, y = decimalLatitude, color = date_year)) +
+  coord_fixed(1, xlim = c(0, 180), ylim = c(-60, 0))
+
+
+#Adicionar cores aos pontos, de acordo com o país da ocorrência
+ggplot() +
+  geom_polygon(data = world, aes(x = long, y = lat, group = group), fill = "#dddddd") +
+  geom_point(data = molram, aes(x = decimalLongitude, y = decimalLatitude, color = country)) +
+  coord_fixed(1, xlim = c(0, 180), ylim = c(-60, 0))
+
+
+#Tudo junto para 3 espécies na costa do Brasil#
+zoanthus <- occurrence("Zoanthus")
+View(zoanthus)
+
+palythoa <- occurrence("Palythoa")
+View(palythoa)
+
+mussismilia <- occurrence("Mussismilia")
+View(mussismilia)
+
+ggplot() +
+  geom_polygon(data = world, aes(x = long, y = lat, group = group), fill = "black") +
+  geom_point(data = zoanthus, aes(x = decimalLongitude, y = decimalLatitude, color = "Zoanthus sp")) +
+  geom_point(data = palythoa, aes(x = decimalLongitude, y = decimalLatitude, color = "Palythoa sp")) +
+  geom_point(data = mussismilia, aes(x = decimalLongitude, y = decimalLatitude, color = "Mussismilia sp")) +
+  coord_fixed(1, xlim = c(-53, -20), ylim = c(-40, 10))
+
+#STOP - vocês podem tentar com outras espécies e regiões
+
+## Exemplo 2 - Histograma de Frequência para Grupos taxonômicos ##
+
+# Criar e visualizar objeto com Ocorrências de Nudibranchia #
+dor <- occurrence("Doridoidea")
+View(dor)
+
+# Plotar histograma de frequência de ocorrência no tempo/ano #
+ggplot() +
+  geom_histogram(data = dor, aes(x = date_year))
+
+# Determinar intervalos de 2 anos #
+ggplot() +
+  geom_histogram(data = dor, aes(x = date_year), binwidth = 2)
+
+# Dividir em famílias ##
+ggplot() +
+  geom_histogram(data = dor, aes(x = date_year, fill = family), binwidth = 2) +
+  scale_fill_brewer(palette = "Spectral")
+
+# Classificar em generos ##
+ggplot() +
+  geom_histogram(data = dor, aes(x = date_year, fill = genus), binwidth = 2) +
+  scale_fill_brewer(palette = "Spectral")
+
+# Diminuir o intervalo de tempo ##
+ggplot() +
+  geom_histogram(data = dor, aes(x = date_year, fill = genus), binwidth = 2) +
+  scale_fill_brewer(palette = "Spectral") +
+  xlim(c(1950, 2020))
+
+#STOP - vocês podem tentar com outros taxa (e.g. Crustacea)
+barnacle <- occurrence("Chthamalus")
+View(barnacle)
+ggplot() +
+  geom_histogram(data = barnacle, aes(x = date_year, fill = species), binwidth = 2)
+
+
+################################################################
+
+
+## ERDDAP ##
+
+install.packages("ncdf4", dependencies = TRUE) 
+install.packages("parsedate", dependencies = TRUE)
+install.packages("plotdap", dependencies = TRUE)
+install.packages("rerddap", dependencies = TRUE)
+install.packages("sp", dependencies = TRUE)
+install.packages("rerddapXtracto", dependencies = TRUE)
+install.packages("devtools")
+
+library(ncdf4)
+library(parsedate)
+library(sp)
+library(devtools)
+library(mapdata)
+library(rerddapXtracto)
+library(gganimate)
+library(ggplot2)
+library(plotdap)
+library(rerddap)
+
+## Informação ##
+browseURL("https://upwell.pfeg.noaa.gov/erddap/index.html")
+
+
+## Mapas de SST Mensal ##  
+# Informação: 
+browseURL("https://coastwatch.pfeg.noaa.gov/erddap/griddap/jplMURSST41mday.html")
+
+# Dataset Title: 	Multi-scale Ultra-high Resolution (MUR) SST Analysis fv04.1, Global, 0.01°, 2002-present, Monthly
+
+## Verificar informações sobre o conjunto de dados ##
+dataInfo <- rerddap::info('jplMURSST41mday')
+dataInfo
+
+## Extrair dados para a região de interesse e janela temporal (Costa do ES) ##
+dataInfo <- rerddap::info('jplMURSST41mday')
+parameter <- 'sst'
+xcoord <- c(-40, -35)
+ycoord <- c(-17, -22)
+tcoord <- c('2020-09-01', '2020-09-01')
+mur_dateline <- rxtracto_3D(dataInfo, parameter, xcoord = xcoord, ycoord = ycoord, tcoord = tcoord)
+
+## Chamar mapa ##
+w <- map_data("world")
+w <- map_data("world2Hires")
+
+## Função acessória para mapa ##
+mapFrame <- function(longitude, latitude, my_data) {
+  my_data_name <- names(my_data)
+  temp_data <- drop(my_data[[1]])
+  dims <- dim(temp_data)
+  temp_data <- array(temp_data, dims[1] * dims[2])
+  my_frame <- expand.grid(x = longitude, y = latitude)
+  my_frame[my_data_name] <- temp_data
+  return(my_frame)
+}
+
+## Plotar ##
+mur_frame <- mapFrame(mur_dateline$longitude, mur_dateline$latitude, mur_dateline['sst'])
+mycolor <- cmocean::cmocean('thermal')(256)
+myplot <- ggplot(data = mur_frame, aes(x = x, y = y, fill = sst)) +
+  geom_polygon(data = w, aes(x = long, y = lat, group = group), fill = "grey80") +     
+  geom_tile(interpolate = FALSE) +
+  scale_fill_gradientn(colours = mycolor, na.value = NA) + 
+  theme_bw() + ylab("latitude") + xlab("longitude") +
+  coord_fixed(1.3, xlim = xlim, ylim = ylim)
+myplot
+
+
+
+## Mapas de SST de outra Base de dados - Resolução diária ##  
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(purrr)
+
+# Informação 
+browseURL("https://coastwatch.pfeg.noaa.gov/erddap/griddap/ncdcOisst2Agg.html")
+
+# Dataset Title: 	SST, Daily Optimum Interpolation (OI), AVHRR Only, Version 2, Final, Global, 0.25°, 1982-2020
+
+## Verificar informações sobre o conjunto de dados ##
+dataInfo <- rerddap::info('ncdcOisst2Agg')
+dataInfo
+
+## Extrair dados para a região de interesse e janela temporal (Costa do ES) ##
+dataInfo <- rerddap::info('jplMURSST41mday')
+parameter <- 'sst'
+xcoord <- c(-40, -35)
+ycoord <- c(-17, -22)
+tcoord <- c('2019-01-01', '2019-01-31')
+mur_dateline <- rxtracto_3D(dataInfo, parameter, xcoord = xcoord, ycoord = ycoord, tcoord = tcoord)
+
+## Chamar informações e fazer correções para o mapa ##
+w <- map_data("world")
+w <- map_data("world2Hires")
+
+# opção: w <- map("worldHires", ylim = c(-17, -22), xlim = c(-40, -35))
+
+## Função acessória para mapa ##
+mapFrame <- function(longitude, latitude, my_data) {
+  my_data_name <- names(my_data)
+  temp_data <- drop(my_data[[1]])
+  dims <- dim(temp_data)
+  temp_data <- array(temp_data, dims[1] * dims[2])
+  my_frame <- expand.grid(x = longitude, y = latitude)
+  my_frame[my_data_name] <- temp_data
+  return(my_frame)
+}
+
+## Plotar ##
+mur_frame <- mapFrame(mur_dateline$longitude, mur_dateline$latitude, mur_dateline['sst'])
+mycolor <- cmocean::cmocean('thermal')(256)
+myplot <- ggplot(data = mur_frame, aes(x = x, y = y, fill = sst)) +
+  geom_polygon(data = w, aes(x = long, y = lat, group = group), fill = "grey80") + 
+  geom_tile(interpolate = FALSE) +
+  scale_fill_gradientn(colours = mycolor, na.value = NA) + 
+  theme_bw() + 
+  ylab("latitude") + 
+  xlab("longitude") +
+  coord_fixed(1.3, xlim = xlim, ylim = ylim) +
+  ggtitle("SST Coast of Espírito Santo")
+
+myplot
+
+
+
+################################################################
+
+## IOOS Glider Data ##
+
+require("rerddap")
+urlBase <- "https://data.ioos.us/gliders/erddap/"
+gliderInfo <- info("sp064-20161214T1913",  url = urlBase)
+glider <- tabledap(gliderInfo, fields = c("longitude", "latitude", "depth", "salinity"), 'time>=2016-12-14', 'time<=2016-12-23', url = urlBase)
+glider$longitude <- as.numeric(glider$longitude)
+glider$latitude <- as.numeric(glider$latitude)
+glider$depth <- as.numeric(glider$depth)
+
+require("plot3D")
+scatter3D(x = glider$longitude , y = glider$latitude , z = -glider$depth, colvar = glider$salinity,              col = colors$salinity, phi = 40, theta = 25, bty = "g", type = "p", 
+          ticktype = "detailed", pch = 10, clim = c(33.2,34.31), clab = 'Salinity', 
+          xlab = "longitude", ylab = "latitude", zlab = "depth",
+          cex = c(0.5, 1, 1.5))
+
+
+
+################################################################
+
+## NEON Time Series
+
+library(lubridate) # for working with dates
+library(ggplot2)  # for creating graphs
+library(scales)   # to access breaks/formatting functions
+library(gridExtra) # for arranging plots
+
+# Acessar os Dados meteorológicos DIÁRIOS HARV, 2009-2011
+harMetDaily.09.11 <- read.csv(
+  file="NEON-DS-Met-Time-Series/HARV/FisherTower-Met/Met_HARV_Daily_2009_2011.csv",
+  stringsAsFactors = FALSE)
+
+# Transformar datas em classes/grupos de datas
+harMetDaily.09.11$date <- as.Date(harMetDaily.09.11$date)
+
+# Acessar os Dados meteorológicos MENSAIS HARV, 2009-2011
+harTemp.monthly.09.11<-read.csv(
+  file="NEON-DS-Met-Time-Series/HARV/FisherTower-Met/Temp_HARV_Monthly_09_11.csv",
+  stringsAsFactors=FALSE)
+
+# Transformar datas em classes/grupos de datas
+harTemp.monthly.09.11$date <- as.Date(harTemp.monthly.09.11$datetime)
+
+# Plotar Temperatura do Ar
+ggplot(harMetDaily.09.11, aes(date, airt)) +
+  geom_point(na.rm=TRUE)
+
+# Ajustar cor, tamanho e símbolo
+ggplot(harMetDaily.09.11, aes(date, airt)) +
+  geom_point(na.rm=TRUE, color="blue", size=3, pch=18)
+
+# Acrescentar Legendas e títulos
+ggplot(harMetDaily.09.11, aes(date, airt)) +
+  geom_point(na.rm=TRUE, color="blue", size=1) + 
+  ggtitle("Air Temperature 2009-2011\n NEON Harvard Forest Field Site") +
+  xlab("Date") + ylab("Air Temperature (C)")
+
+
+# Transformar o gráfico em um objeto (AirTempDaily) #
+AirTempDaily <- ggplot(harMetDaily.09.11, aes(date, airt)) +
+  geom_point(na.rm=TRUE, color="purple", size=1) + 
+  ggtitle("Air Temperature\n 2009-2011\n NEON Harvard Forest") +
+  xlab("Date") + ylab("Air Temperature (C)")
+
+AirTempDaily
+
+# Formatar datas nos eixos #
+AirTempDailyb <- AirTempDaily + 
+  (scale_x_date(labels=date_format("%b %y")))
+
+AirTempDailyb
+
+# Criar intervalos de 6 meses #
+AirTempDaily_6mo <- AirTempDaily + 
+  (scale_x_date(breaks=date_breaks("6 months"),
+                labels=date_format("%b %y")))
+
+AirTempDaily_6mo
+
+
+# Criar intervalos de 3 meses #
+AirTempDaily_3mo <- AirTempDaily + 
+  (scale_x_date(breaks=date_breaks("3 months"),
+                labels=date_format("%b %y")))
+
+AirTempDaily_3mo
+
+
+# Criar intervalos anuais
+AirTempDaily_1y <- AirTempDaily + 
+  (scale_x_date(breaks=date_breaks("1 year"),
+                labels=date_format("%b %y")))
+
+AirTempDaily_1y
+
+# Criar intervalos bi-anuais
+AirTempDaily_2y <- AirTempDaily + 
+  (scale_x_date(breaks=date_breaks("2 year"),
+                labels=date_format("%b %y"))) 
+
+AirTempDaily_2y
+
+# Adicionar tema 
+
+AirTempDaily_2y <- AirTempDaily + 
+  (scale_x_date(breaks=date_breaks("2 year"),
+                labels=date_format("%b %y"))) + theme_bw()
+
+AirTempDaily_2y
+
+
+# Mudar tema 
+AirTempDaily_2y <- AirTempDaily + 
+  (scale_x_date(breaks=date_breaks("2 year"),
+                labels=date_format("%b %y"))) + theme_classic()
+
+AirTempDaily_2y
+
+# Usar pacote de temas
+install.packages('ggthemes', dependencies = TRUE)
+library(ggthemes)
+
+AirTempDaily_economist<-AirTempDaily_1y +
+  theme_economist()
+
+AirTempDaily_economist
+
+AirTempDaily_strata<-AirTempDaily_1y +
+  theme_stata()
+
+AirTempDaily_strata
+
+
+#Ajustar fontes
+AirTempDaily_custom<-AirTempDaily_1y +
+  theme(plot.title = element_text(lineheight=.8, face="bold",size = 15)) +
+  theme(text = element_text(size=12)) 
+
+AirTempDaily_custom
+
+
+# Usar linhas geométricas
+AirTempDaily_line <- ggplot(harMetDaily.09.11, aes(date, airt)) +
+  geom_line(na.rm=TRUE) +  
+  ggtitle("Air Temperature Harvard Forest\n 2009-2011") +
+  xlab("Date") + ylab("Air Temperature (C)") +
+  scale_x_date(labels=date_format ("%b %y")) +
+  theme(plot.title = element_text(lineheight=.8, face="bold", 
+                                  size = 20)) +
+  theme(text = element_text(size=18))
+
+AirTempDaily_line
+
+# Usar pontos e linhas geométricas
+AirTempDaily + geom_line(na.rm=TRUE) 
+
+# Criar linha de tendência
+# adding on a trend lin using loess
+AirTempDaily_trend <- AirTempDaily + stat_smooth(colour="green") + theme_clean()
+
+AirTempDaily_trend
+
+
+# Comparar dados na mesma janela Vertical
+grid.arrange(AirTempDaily, AirTempMonthly, ncol=1)
+
+# Comparar dados na mesma janela Horizontal
+grid.arrange(AirTempDaily, AirTempMonthly, ncol=2)
+
+
+################################################################
+
+#Exemplos com dados de Precipitação
+# em pontos geométricos
+PrecipDaily <- ggplot(harMetDaily.09.11, aes(date, prec)) +
+  geom_point() +
+  ggtitle("Daily Precipitation Harvard Forest\n 2009-2011") +
+  xlab("Date") + ylab("Precipitation (mm)") +
+  scale_x_date(labels=date_format ("%m-%y"))+
+  theme(plot.title = element_text(lineheight=.8, face="bold",
+                                  size = 20)) +
+  theme(text = element_text(size=18))
+
+PrecipDaily
+
+# em barras
+PrecipDailyBarA <- ggplot(harMetDaily.09.11, aes(date, prec)) +
+  geom_bar(stat="identity", na.rm = TRUE) +
+  ggtitle("Daily Precipitation\n Harvard Forest") +
+  xlab("Date") + ylab("Precipitation (mm)") +
+  scale_x_date(labels=date_format ("%b %y"), breaks=date_breaks("1 year")) +
+  theme(plot.title = element_text(lineheight=.8, face="bold", size = 20)) +
+  theme(text = element_text(size=18))
+
+PrecipDailyBarA
+
+#Criar um subset de dados
+# Definir Início e Fim, transformar em classes
+startTime2 <- as.Date("2010-01-01")
+endTime2 <- as.Date("2011-01-01")
+
+# Criar um objeto com este intervalo de tempo
+start.end2 <- c(startTime2,endTime2)
+start.end2
+
+# Plotar dados de precipitação apenas para este intervalo com a função scale_x_date(limits)
+ggplot(harMetDaily.09.11, aes(date, prec)) +
+  geom_bar(stat="identity", na.rm = TRUE, colour="darkblue") +
+  ggtitle("Daily Precipitation\n 2010\n Harvard Forest") +
+  xlab("") + ylab("Precipitation (mm)") +
+  scale_x_date(labels=date_format ("%B"),
+               breaks=date_breaks("2 months"), limits=start.end2) +
+  theme(plot.title = element_text(lineheight=.8, face="bold", size = 20)) +
+  theme(text = element_text(size=18))
+
+
+################################################################
+## Pacote para fazer o download dos dados NEON
+
+
+
+
+################################################################
+
+## Generalized Additive Model ##
+
+library(gam)
+library(ggplot2)
+library(mgcv)
+
+##Abundance*C15##
+ecol <- read.table(file='validation_Ab*C15.csv', sep = ';', dec=',', header=T)
+ecol
+ecol2 <- read.table(file='validation_Ab*C15_observed.csv', sep = ';', dec=',', header = T)
+ecol2
+ecol3 <- read.table(file='validation_Ab*C15_gam2.csv', sep = ';', dec=',', header=T)
+ecol3
+
+gam1<-gam(ecol$Abundance~s(ecol$Class15, k=5, bs="ts"))
+summary(gam1)
+plot(gam1)
+gam2<-gam(ecol3$Abundance~s(ecol3$Class15, k=5, bs="ts"))
+summary(gam2)
+plot(gam2)
+
+par(mfrow=c(1,1))
+plot(gam1, lwd = 4, xlim = c(20,80), ylim = c(-150,1200), xlab="", ylab="",main="", xaxt="n", yaxt="n", se = FALSE, frame.plot = FALSE)
+par(new=T)
+plot (ecol$Abundance~ecol$Class15, xlim = c(0,82), ylim = c(0,2000), xlab = "", ylab = "", cex = 3, col = "black", pch = 16, font.axis=2, cex.axis=2, frame.plot = FALSE, axes = FALSE)
+axis(1, lwd = 5, cex.axis=2)
+axis(2, lwd = 5, cex.axis=2)
+par(new=T)
+plot(ecol2$Abundance~ecol2$Class15,pch = 15, cex = 3, col = 3, xlab="", ylab="",main="", xaxt="n", yaxt="n",ylim = c(0,2000), xlim = c(0,90), frame.plot = FALSE, axes = FALSE)
+par(new=T)
+plot(gam2, lwd = 4, col = 3, xlab="", ylab="",main="", xaxt="n", yaxt="n", se = FALSE, frame.plot = FALSE, axes = FALSE)
+
+
+##Richness*C21##
+ecol <- read.table(file='validation_Ric*C21.csv', sep = ';', dec=',', header=T)
+ecol
+ecol2 <- read.table(file='validation_Ric*C21_observed.csv', sep = ';', dec=',', header = T)
+ecol2
+ecol3 <-read.table(file='validation_Ric*C21_gam2.csv', sep = ';', dec=',', header = T)
+ecol3
+
+gam1<-gam(ecol$Richness~s(ecol$Class21, k=5, bs="ts"))
+summary(gam1)
+plot(gam1)
+gam2 <- gam(ecol3$Richness~s(ecol3$Class21, k=5, bs="ts"))
+summary(gam2)
+plot(gam2)
+
+par(mfrow=c(1,1))
+plot(gam1, lwd = 4, xlab="", ylab="",main="", xaxt="n", yaxt="n", ylim = c(-4,9), xlim = c(0,70), se = FALSE, frame.plot = FALSE, axes = FALSE)
+par(new=T)
+plot (ecol$Richness~ecol$Class21, xlim = c(0,70), ylim = c(0,20), xlab = "", ylab = "", cex = 3, col = "black", pch = 16, font.axis=2, cex.axis=2, frame.plot = FALSE, axes = FALSE)
+axis(1, lwd = 5, cex.axis=2)
+axis(2, lwd = 5, cex.axis=2)
+par(new=T)
+plot(ecol2$Richness~ecol2$Class21,pch = 15, cex = 3, col = 3, xlab="", ylab="",main="", xaxt="n", yaxt="n",ylim = c(0,20), xlim = c(0,70), frame.plot = FALSE, axes = FALSE)
+par(new=T)
+plot(gam2, lwd = 4, col = 3, xlab="", ylab="",main="", xaxt="n", yaxt="n", se = FALSE, frame.plot = FALSE, axes = FALSE)
+
+
+## SST## ##Abundance (lag-1)##
+ecol <- read.table(file='validation_sst_abundance-1.csv', sep = ';', dec=',', header=T)
+ecol
+ecol2 <- read.table(file='validation_sst_abundance-1_observed.csv', sep = ';', dec=',', header = T)
+ecol2
+ecol3 <- read.table(file='validation_sst_abundance-1_gam2.csv', sep = ';', dec=',', header=T)
+ecol3
+
+gam1<-gam(ecol$abundance~s(ecol$sst_regional, k=5, bs="ts"))
+summary(gam1)
+plot(gam1)
+gam2<-gam(ecol3$abundance~s(ecol3$sst_regional, k=5, bs="ts"))
+summary(gam2)
+plot(gam2)
+
+par(mfrow=c(1,1))
+plot(gam1, lwd = 4, xlim = c(22,28), ylim = c(-100,500), xlab="", ylab="",main="", xaxt="n", yaxt="n", se = FALSE, frame.plot = FALSE, axes = FALSE)
+par(new=T)
+plot(ecol$abundance~ecol$sst_regional, xlim = c(22,28), ylim = c(0,2000), xlab = "", ylab = "", cex = 3, col = "black", pch = 16, font.axis=2, cex.axis=2, frame.plot = FALSE, axes = FALSE)
+axis(1, lwd = 5, cex.axis=2)
+axis(2, lwd = 5, cex.axis=2)
+par(new=T)
+plot(ecol2$abundance~ecol2$sst_regional,pch = 19, cex = 3, col = "red", xlab="", ylab="",main="", xaxt="n", yaxt="n",ylim = c(0,2000), xlim = c(22,28), frame.plot = FALSE, axes = FALSE)
+par(new=T)
+plot(gam2, lwd = 4, col = "red", xlab="", ylab="",main="", xaxt="n", yaxt="n", se = FALSE, frame.plot = FALSE, axes = FALSE)
+
+
+##SST##
+
+##Richness##
+ecol <- read.table(file='validation_sst.csv', sep = ';', dec=',', header=T)
+ecol
+ecol2 <- read.table(file='validation_sst_observed.csv', sep = ';', dec=',', header = T)
+ecol2
+ecol3 <- read.table(file='validation_sst_gam2.csv', sep = ';', dec=',', header=T)
+ecol3
+
+gam1<-gam(ecol$richness~s(ecol$sst_regional, k=5, bs="ts"))
+summary(gam1)
+plot(gam1)
+gam2<-gam(ecol3$richness~s(ecol3$sst_regional, k=5, bs="ts"))
+summary(gam2)
+plot(gam2)
+
+par(mfrow=c(1,1))
+plot(gam1, lwd = 4, xlim = c(22,28), ylim = c(-4,6), xlab="", ylab="",main="", xaxt="n", yaxt="n", se = FALSE, frame.plot = FALSE, axes = FALSE)
+par(new=T)
+plot(ecol$richness~ecol$sst_regional, xlim = c(22,28), ylim = c(0,16), xlab = "", ylab = "", cex = 3, col = "black", pch = 16, font.axis=2, cex.axis=2, frame.plot = FALSE, axes = FALSE)
+axis(1, lwd = 5, cex.axis=2)
+axis(2, lwd = 5, cex.axis=2)
+par(new=T)
+plot(ecol2$richness~ecol2$sst_regional,pch = 19, cex = 3, col = "red", xlab="", ylab="",main="", xaxt="n", yaxt="n",ylim = c(0,16), xlim = c(22,28), frame.plot = FALSE, axes = FALSE)
+par(new=T)
+plot(gam2, lwd = 4, col = "red", xlab="", ylab="",main="", xaxt="n", yaxt="n", se = FALSE, frame.plot = FALSE, axes = FALSE)
+
+
+################################################################
+## Gráficos TS ##
+
+install.packages("PlotSvalbard")
+devtools::install_github("MikkoVihtakari/PlotSvalbard", upgrade = "never")
+install.packages("backports")
+
+library("PlotSvalbard")
+dt <- data.frame(temp = c(1, -1.1, -0.8, 3.2), sal = c(34, 34.5, 34.9, 33.9))
+ts_plot(dt)
+
+data("ctd_kongsfjord")
+ts_plot(ctd_kongsfjord)
+ts_plot(ctd_kongsfjord, zoom = FALSE) # show all of WM
+ts_plot(ctd_kongsfjord, color = "area", margin_distr = TRUE) # scaling color to "area"
+
+# Using a different WM
+data("ctd_rijpfjord")
+ts_plot(ctd_rijpfjord, WM = rijpfjord_watermasses)
+
+ts_plot(ctd_rijpfjord, WM = rijpfjord_watermasses, symbol_shape = 16, symbol_size = 0.1,
+        symbol_alpha = 0.8, margin_distr = TRUE, xlim = c(32, 35), color = "area")
+
+################################################################
